@@ -1,0 +1,73 @@
+ 
+module Language.Haskell.THIH.Typecheck.Examples.Maybe where
+  
+import Language.Haskell.THIH.Typecheck.Combinators
+
+
+maybeDefns :: [BindGroup e]
+maybeDefns
+ = map toBg
+   [[("isJust",
+      Just (Forall [Star]
+             ([] :=> 
+              (TAp tMaybe (TGen 0) --> tBool))),
+      [([PCon "Just" [PVar "a"]],
+        econst "True"),
+       ([PCon "Nothing" []],
+        econst "False")])],
+    [("isNothing",
+      Just (Forall [Star]
+             ([] :=> 
+              (TAp tMaybe (TGen 0) --> tBool))),
+      [([PCon "Nothing" []],
+        econst "True"),
+       ([PCon "Just" [PVar "a"]],
+        econst "False")])],
+    [("fromJust",
+      Just (Forall [Star]
+             ([] :=> 
+              (TAp tMaybe (TGen 0) --> TGen 0))),
+      [([PCon "Just" [PVar "a"]],
+        evar "a"),
+       ([PCon "Nothing" []],
+        ap [evar "error", elit (LitStr "Maybe.fromJust: Nothing")])])],
+    [("fromMaybe",
+      Just (Forall [Star]
+             ([] :=> 
+              (TGen 0 --> TAp tMaybe (TGen 0) --> TGen 0))),
+      [([PVar "d", PCon "Nothing" []],
+        evar "d"),
+       ([PVar "d", PCon "Just" [PVar "a"]],
+        evar "a")])],
+    [("maybeToList",
+      Just (Forall [Star]
+             ([] :=> 
+              (TAp tMaybe (TGen 0) --> TAp tList (TGen 0)))),
+      [([PCon "Nothing" []],
+        econst "[]"),
+       ([PCon "Just" [PVar "a"]],
+        eCons (evar "a")
+        eNil)])],
+    [("listToMaybe",
+      Just (Forall [Star]
+             ([] :=> 
+              (TAp tList (TGen 0) --> TAp tMaybe (TGen 0)))),
+      [([PCon "[]" []],
+        econst "Nothing"),
+       ([PCon ":" [PVar "a", PVar "as"]],
+        ap [econst "Just", evar "a"])])],
+    [("catMaybes",
+      Just (Forall [Star]
+             ([] :=> 
+              (TAp tList (TAp tMaybe (TGen 0)) --> TAp tList (TGen 0)))),
+      [([PVar "ms"],
+        eCompFrom (PCon "Just" [PVar "m"]) (evar "ms")
+        (eListRet (evar "m")))])],
+    [("mapMaybe",
+      Just (Forall [Star, Star]
+             ([] :=> 
+              ((TGen 0 --> TAp tMaybe (TGen 1)) --> TAp tList (TGen 0) --> TAp tList (TGen 1)))),
+      [([PVar "f"],
+        ap [evar ".", evar "catMaybes", ap [evar "map", evar "f"]])])]]
+
+-----------------------------------------------------------------------------
