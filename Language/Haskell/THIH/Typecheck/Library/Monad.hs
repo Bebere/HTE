@@ -1,12 +1,14 @@
-module Language.Haskell.THIH.Library.Typecheck.Monad where
+module Language.Haskell.THIH.Typecheck.Library.Monad where
 
 --import Language.Haskell.THIH.Combinators
 import Language.Haskell.THIH.Typecheck.Library.Prelude
-import Language.Haskell.THIH.Syntax 
+import Language.Haskell.THIH.Syntax
 import Language.Haskell.THIH.Typecheck.Types
+import Language.Haskell.THIH.Typecheck.Internals(mkInst)
 import Language.Haskell.THIH.BasicTypes
+import Control.Applicative
 
-moduleMonad = ModuleH []  monadTypeClasses monadFunctions
+moduleMonad = ModuleH []  monadTypeClasses monadInstances monadFunctions
 
 monadTypeClasses =  [tcMonadPlus] 
 
@@ -79,7 +81,7 @@ monadFunctions
 
 
 tcMonadPlus = TypeClass [IsIn cMonad [atype]] cMonadPlus asig
-              [mzeroMfun,mplusMfun] instsMonadPlus
+              [mzeroMfun,mplusMfun]
 cMonadPlus = "MonadPlus"
 mzeroMfun  = "mzero" :>: (Forall [Kfun Star Star, Star]
                           ([isIn1 cMonadPlus (TGen 0)] :=> 
@@ -90,6 +92,8 @@ mplusMfun  = "mplus" :>: (Forall [Kfun Star Star, Star]
                             TAp (TGen 0) (TGen 1) -->
                             TAp (TGen 0) (TGen 1))))
 
+monadInstances = Instance <$> instsMonadPlus
+
 instsMonadPlus
- = [Inst [] ([] :=> isIn1 cMonadPlus tMaybe),
-    Inst [] ([] :=> isIn1 cMonadPlus tList)]
+ = [mkInst [] ([] :=> isIn1 cMonadPlus tMaybe),
+    mkInst [] ([] :=> isIn1 cMonadPlus tList)]

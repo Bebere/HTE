@@ -7,7 +7,7 @@ import Language.Haskell.THIH.Typecheck.Types
 import Language.Haskell.THIH.BasicTypes
  
 
-moduleMaybe = ModuleH [] [] maybeFunctions
+moduleMaybe = ModuleH [] [] [] maybeFunctions
 
 maybeFunctions
  =  ["isJust" :>:
