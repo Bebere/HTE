@@ -7,7 +7,7 @@ import Language.Haskell.THIH.Typecheck.Types
 import Language.Haskell.THIH.BasicTypes
  
 
-moduleList = ModuleH [] [] listFunctions
+moduleList = ModuleH [] [] [] listFunctions
 
 listFunctions
  =  ["findIndices" :>:
