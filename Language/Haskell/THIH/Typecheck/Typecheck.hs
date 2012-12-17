@@ -170,7 +170,7 @@ tiProgram ::
 tiProgram  ce as  (Program bgs) = runTI $
                       do (ps, as') <- tiSeq tiBindGroup  ce as bgs
                          s         <- getSubst
-                         let rs     = reduce  ce (apply s ps)
+                         rs        <- reduce  ce (apply s ps)
                          s'        <- defaultSubst  ce [] rs
                          return (apply (s'@@s) as')
 --------------------------------
@@ -183,6 +183,6 @@ tiProgram' ::
 tiProgram'   ce as (Program bgs) = runTI $
   do (ps, as') <- tiSeq tiBindGroup'  ce as bgs
      s         <- getSubst
-     let rs     = reduce  ce (apply s ps)
+     rs        <- reduce  ce (apply s ps)
      s'        <- defaultSubst  ce [] rs
      return (apply (s'@@s) as')
