@@ -23,8 +23,14 @@ import Language.Haskell.THIH.Typecheck.Library.Prelude
 import Language.Haskell.Exts.Desugaring
 import Language.Haskell.Exts.ToTHIH
 import Language.Haskell.Exts.FromTHIH
+import Language.Haskell.Exts.SrcLoc(noLoc)
+import Control.DeepSeq
+import Control.Applicative 
+import System.IO.Unsafe
+import Control.Exception as CE
 import Language.Haskell.Exts (ParseResult(..),QName(..),parseType
-                             ,prettyPrint,Pretty(..),Name(..),parseExp)
+                             ,prettyPrint,Pretty(..),Name(..),parseExp,Exp
+                             ,ModuleName(..),Decl(PatBind),Rhs(..),Binds(..))
 import qualified Language.Haskell.Exts as HSE
 
 import Control.Applicative
@@ -70,6 +76,25 @@ testConversion inp = let
   sm  = cSModule dm
   in
    show sm
+   
+   
+tcHSE :: [Assump] -> HSE.Module -> Maybe [String]
+tcHSE env ast = unsafePerformIO $ 
+                CE.catch 
+                ( do let x = ( (uncurry (++)) $ unzip $ 
+                               (\(x,y) -> (x,prettyPrint y))
+                               <$> cAssump 
+                               <$> tcHSEModule (let (x,y,z) = preludeEnv 
+                                                in  (x,y, env ++ z)) ast
+                          )
+                     deepseq x (return $ Just x)
+             )   
+             ((\_ -> return Nothing) :: (SomeException  -> IO (Maybe a)))
+
+toModule :: Exp -> HSE.Module
+toModule e = HSE.Module noLoc (ModuleName "Test") [] Nothing Nothing [] 
+             [PatBind noLoc (HSE.PVar $ Ident "_f") Nothing 
+              (UnGuardedRhs e) (BDecls [])]   
 -----------------------------------------------------
 -- Loading
 -----------------------------------------------------

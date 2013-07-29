@@ -17,4 +17,5 @@ cabal-version:       >=1.8
 library
   exposed-modules:     Language.Haskell.THIH.Syntax, Language.Haskell.THIH.SurfaceTypes, Language.Haskell.THIH.Demotion, Language.Haskell.THIH.BasicTypes, Language.Haskell.THIH.Typecheck.Types, Language.Haskell.THIH.Typecheck.TypeConversions, Language.Haskell.THIH.Typecheck.Typecheck, Language.Haskell.THIH.Typecheck.Load, Language.Haskell.THIH.Typecheck.KindInference, Language.Haskell.THIH.Typecheck.Internals, Language.Haskell.THIH.Typecheck.Demotion, Language.Haskell.THIH.Typecheck.Combinators, Language.Haskell.THIH.Typecheck.Library.Prelude, Language.Haskell.THIH.Typecheck.Library.Monad, Language.Haskell.THIH.Typecheck.Library.Maybe, Language.Haskell.THIH.Typecheck.Library.List, Language.Haskell.Exts.ToTHIH, Language.Haskell.Exts.FromTHIH, Language.Haskell.Exts.Desugaring
   -- other-modules:       
-  build-depends:       base ==4.*, transformers ==0.3.*, haskell-src-exts, mtl
+  build-depends:       base ==4.*, transformers ==0.3.*, haskell-src-exts, mtl, deepseq
+

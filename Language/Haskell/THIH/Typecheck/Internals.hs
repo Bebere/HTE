@@ -13,7 +13,7 @@ module Language.Haskell.THIH.Typecheck.Internals where
 import Language.Haskell.THIH.Typecheck.Types 
 import Language.Haskell.THIH.BasicTypes
 
-import Data.List ((\\),union,partition,intersect,nub)
+import Data.List ((\\),union,partition,intersect,nub,intercalate)
 import Control.Monad (foldM,msum)
 import Debug.Trace
 
@@ -218,9 +218,15 @@ simplify ent = loop []
        loop rs (p:ps) | ent (rs++ps) p = loop rs ps
                       | otherwise      = loop (p:rs) ps
 
-reduce      ::  ClassEnv -> [Pred] -> [Pred]
-reduce  ce    = simplify (scEntail ce) . elimTauts  ce
-
+reduce      :: Monad m =>  ClassEnv -> [Pred] -> m [Pred]
+reduce  ce ps   = do 
+  let ps' = elimTauts ce ps
+  if (all (not . null . tv) ps') 
+  -- all the fully applied predicates should have been removed by now
+    then return $ simplify (scEntail ce) ps'
+    else fail $ "Missing the instance declarations: " 
+         ++ (intercalate "," [show p|p<-ps',null $ tv p])
+ 
 elimTauts   ::  ClassEnv -> [Pred] -> [Pred]
 elimTauts  ce ps = [ p | p <- ps, not (entail  ce [] p) ]
 
@@ -265,8 +271,8 @@ defaultSubst    = withDefaults (\vps ts -> zip (map fst vps) ts)
  
 split :: Monad m =>  ClassEnv -> [Tyvar] -> [Tyvar] -> [Pred]
                       -> m ([Pred], [Pred])
-split  ce fs gs ps = do let ps' = reduce  ce ps
-                            (ds, rs) = partition (all (`elem` fs) . tv) ps'
+split  ce fs gs ps = do ps' <- reduce  ce ps
+                        let (ds, rs) = partition (all (`elem` fs) . tv) ps'
                         rs' <- defaultedPreds  ce (fs++gs) rs
                         return (ds, rs \\ rs')
 
@@ -364,39 +370,4 @@ find i ((i':>:sc):as) = if i==i' then return sc else find i as
 ---------------------------------------
 enumId  :: Int -> Id
 enumId n = "v" ++ show n    
-               
------------------------------------      
--- KindInference
------------------------------------ 
---inferKind :: SSchme -> Scheme 
---inferKind (SForall vars preds st) = undefined
-
-
-
-{-
-cScheme :: HSE.Type -> Scheme
-cScheme (TyForall Nothing [] t) = 
-  Forall []  ([]:=>(cType t))                      
-cScheme (TyForall Nothing (p:ps) t) = error $ "Type " ++ (prettyPrint t) 
-            ++  " doesn't have the correct format!"
-cScheme (TyForall (Just m) ps t) 
-  | (length [1 | UnkindedVar _ <- m]) == 0 =  
-   let 
-     t' = cType t
-     ps' = map cPred ps
-     vars  = zip m [0.. (length m) - 1]                                         
-     t'' = foldl (\tt ((KindedVar n k),i) -> 
-                  apply (Tyvar (cId n) Star +->TGen i ) tt) t' vars
-     ps'' =foldl (\tt ((KindedVar n k),i) -> 
-                  apply (Tyvar (cId n) Star +->TGen i ) tt) ps' vars
-     ks = [cKind k|KindedVar _ k <- m]     
-    in 
-    Forall ks (ps'' :=> t'')  
-     
-  | otherwise = error $ "These type variables need to be explicitly kinded: " 
-                ++ ( show [prettyPrint t | UnkindedVar _ <- m])
-cScheme t = Forall []  ([]:=>(cType t))                  
-
--}
---cType2Expression :: 
  
